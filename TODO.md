@@ -6,12 +6,16 @@
 - [x] Rebalance fight simulator internals so both sides can win by KO/TKO or submission.
 - [x] Keep fight simulation disconnected from UI until full verification and integration pass.
 - [x] Add fight simulation diagnostics to verify KO/submission/decision coverage and zero NaN finish chances.
+- [x] Connect the fight simulator to matchmaking selection.
+- [x] Apply accepted fight results to record, money, fame, ranking, condition, injuries, and career history.
+- [x] Add baseline fight offer risk/reward copy.
 
 ## Next MVP follow-ups
-- [ ] Connect the fight simulator to matchmaking selection once balance + UX review is complete.
-- [ ] Persist expanded career timeline and fight history views.
-- [ ] Add clearer fight offer risk/reward breakdown.
-- [ ] Add dedicated fight detail modal instead of log-only output.
+- [ ] Add dedicated fight detail modal instead of inline dashboard-only output.
+- [ ] Persist expanded career timeline filters and richer fight history views.
+- [ ] Add more detailed fight offer risk/reward breakdown with projected ranking/fame movement.
+- [ ] Add automated smoke checks for fight simulation and career result processing.
+- [ ] Re-run balance diagnostics after several UI-played careers.
 
 ## Post-MVP systems
 - [ ] Multi-promotion world and contracts.
