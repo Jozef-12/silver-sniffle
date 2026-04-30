@@ -2,7 +2,7 @@
 
 MMA Career Manager (MVP-first) prototype.
 
-## Current MVP State (after Phase 3 + 4)
+## Current MVP State (after Phase 4 hardening)
 This build currently includes:
 - Fighter creation flow (Phase 2)
 - Training loop with stat/condition/injury updates (Phase 3)
@@ -10,7 +10,7 @@ This build currently includes:
 - Local persistence hooks connected to the active career (load/save/reset)
 
 Not yet connected:
-- Fight simulation is present in code but not wired into the main UI flow.
+- Fight simulation is present in code, diagnostics are in place, and it is intentionally not wired into the main UI flow yet.
 - Full career persistence/history integration is still partial and will be completed in a later phase.
 
 ## Requirements

@@ -45,20 +45,82 @@ export function simulateFight(player, opponent) {
     const playerSubChance = finishChance(p, o, "sub", round);
     const oppSubChance = finishChance(o, p, "sub", round);
 
-    const playerFinishRoll = Math.random();
-    const oppFinishRoll = Math.random();
+    const playerKoRoll = Math.random();
+    const oppKoRoll = Math.random();
+    const playerSubRoll = Math.random();
+    const oppSubRoll = Math.random();
 
-    if (playerFinishRoll < playerKoChance) {
-      return { winner: player.name, loser: opponent.name, method: "KO/TKO", round, summary: [...summary, `Round ${round}: ${player.name} found the finish with heavy strikes.`] };
+    const finishEvents = [];
+
+    if (playerKoRoll < playerKoChance) {
+      finishEvents.push({
+        winner: player.name,
+        loser: opponent.name,
+        method: "KO/TKO",
+        narrative: `Round ${round}: ${player.name} found the finish with heavy strikes.`,
+        chance: playerKoChance,
+        roll: playerKoRoll,
+        iq: player.stats.fightIQ,
+        roundScoreEdge: pScore - oScore
+      });
     }
-    if (oppFinishRoll < oppKoChance) {
-      return { winner: opponent.name, loser: player.name, method: "KO/TKO", round, summary: [...summary, `Round ${round}: ${opponent.name} dropped ${player.name} for a stoppage.`] };
+
+    if (oppKoRoll < oppKoChance) {
+      finishEvents.push({
+        winner: opponent.name,
+        loser: player.name,
+        method: "KO/TKO",
+        narrative: `Round ${round}: ${opponent.name} dropped ${player.name} for a stoppage.`,
+        chance: oppKoChance,
+        roll: oppKoRoll,
+        iq: opponent.stats.fightIQ,
+        roundScoreEdge: oScore - pScore
+      });
     }
-    if (playerFinishRoll < playerSubChance) {
-      return { winner: player.name, loser: opponent.name, method: "Submission", round, summary: [...summary, `Round ${round}: ${player.name} locked in a fight-ending submission.`] };
+
+    if (playerSubRoll < playerSubChance) {
+      finishEvents.push({
+        winner: player.name,
+        loser: opponent.name,
+        method: "Submission",
+        narrative: `Round ${round}: ${player.name} locked in a fight-ending submission.`,
+        chance: playerSubChance,
+        roll: playerSubRoll,
+        iq: player.stats.fightIQ,
+        roundScoreEdge: pScore - oScore
+      });
     }
-    if (oppFinishRoll < oppSubChance) {
-      return { winner: opponent.name, loser: player.name, method: "Submission", round, summary: [...summary, `Round ${round}: ${opponent.name} forced a tap after a scramble.`] };
+
+    if (oppSubRoll < oppSubChance) {
+      finishEvents.push({
+        winner: opponent.name,
+        loser: player.name,
+        method: "Submission",
+        narrative: `Round ${round}: ${opponent.name} forced a tap after a scramble.`,
+        chance: oppSubChance,
+        roll: oppSubRoll,
+        iq: opponent.stats.fightIQ,
+        roundScoreEdge: oScore - pScore
+      });
+    }
+
+    if (finishEvents.length) {
+      finishEvents.sort((a, b) => {
+        const marginA = a.chance - a.roll;
+        const marginB = b.chance - b.roll;
+        const scoreA = marginA * 100 + a.iq * 0.22 + a.roundScoreEdge * 0.55 + Math.random() * 3;
+        const scoreB = marginB * 100 + b.iq * 0.22 + b.roundScoreEdge * 0.55 + Math.random() * 3;
+        return scoreB - scoreA;
+      });
+
+      const chosenFinish = finishEvents[0];
+      return {
+        winner: chosenFinish.winner,
+        loser: chosenFinish.loser,
+        method: chosenFinish.method,
+        round,
+        summary: [...summary, chosenFinish.narrative]
+      };
     }
 
     if (pScore > oScore) {
@@ -86,7 +148,14 @@ export function runFightSimDiagnostics(player, opponent, iterations = 5000) {
     opponentSub: 0,
     decisions: 0,
     draws: 0,
-    nanFinishChances: 0
+    nanFinishChances: 0,
+    coverage: {
+      playerKoWinsOccur: false,
+      opponentKoWinsOccur: false,
+      playerSubmissionWinsOccur: false,
+      opponentSubmissionWinsOccur: false,
+      decisionsOccur: false
+    }
   };
 
   for (let i = 0; i < iterations; i += 1) {
@@ -115,6 +184,12 @@ export function runFightSimDiagnostics(player, opponent, iterations = 5000) {
       outcomes.draws += 1;
     }
   }
+
+  outcomes.coverage.playerKoWinsOccur = outcomes.playerKo > 0;
+  outcomes.coverage.opponentKoWinsOccur = outcomes.opponentKo > 0;
+  outcomes.coverage.playerSubmissionWinsOccur = outcomes.playerSub > 0;
+  outcomes.coverage.opponentSubmissionWinsOccur = outcomes.opponentSub > 0;
+  outcomes.coverage.decisionsOccur = outcomes.decisions > 0;
 
   return outcomes;
 }
