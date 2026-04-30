@@ -5,6 +5,7 @@
 - [x] Add user-friendly create-fighter validation messages (no empty name, age 18-45, valid class/style).
 - [x] Rebalance fight simulator internals so both sides can win by KO/TKO or submission.
 - [x] Keep fight simulation disconnected from UI until full verification and integration pass.
+- [x] Add fight simulation diagnostics to verify KO/submission/decision coverage and zero NaN finish chances.
 
 ## Next MVP follow-ups
 - [ ] Connect the fight simulator to matchmaking selection once balance + UX review is complete.
