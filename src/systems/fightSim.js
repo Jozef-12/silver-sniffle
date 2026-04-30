@@ -1,33 +1,71 @@
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
+function stat(f, key, fallback = 50) {
+  const value = f.stats?.[key];
+  return Number.isFinite(value) ? value : fallback;
+}
+
 function perf(f, round) {
   const condition = Number.isFinite(f.condition) ? f.condition : 100;
   const injuries = Array.isArray(f.injuries) ? f.injuries : [];
-  const cardioTax = Math.max(0, 62 - f.stats.cardio);
-  const lateRoundScale = 0.15 + Math.max(0, round - 1) * 0.35;
-  const fatiguePenalty = (100 - condition) * 0.22 + cardioTax * lateRoundScale;
-  const injuryPenalty = injuries.length ? 4 + injuries.length * 1.5 : 0;
+  const cardioTax = Math.max(0, 65 - stat(f, "cardio"));
+  const lateRoundScale = 0.2 + Math.max(0, round - 1) * 0.45;
+  const fatiguePenalty = (100 - condition) * 0.28 + cardioTax * lateRoundScale;
+  const injuryPenalty = injuries.length ? 5 + injuries.length * 2 : 0;
+
+  const striking = stat(f, "striking") * 1.15 + stat(f, "speed") * 0.55 + stat(f, "power") * 0.45 + stat(f, "fightIQ") * 0.25 - fatiguePenalty - injuryPenalty;
+  const wrestling = stat(f, "wrestling") * 1.0 + stat(f, "cardio") * 0.3 + stat(f, "durability") * 0.2 - fatiguePenalty - injuryPenalty;
+  const grappling = stat(f, "grappling") * 1.05 + stat(f, "submissionOffense") * 0.5 + stat(f, "wrestling") * 0.35 - fatiguePenalty - injuryPenalty;
+  const defense = stat(f, "defense") * 1.0 + stat(f, "chin") * 0.45 + stat(f, "submissionDefense") * 0.45 + stat(f, "fightIQ") * 0.65 - fatiguePenalty * 0.35;
 
   return {
-    striking: f.stats.striking + f.stats.speed * 0.7 + f.stats.power * 0.55 - fatiguePenalty - injuryPenalty,
-    grappling: f.stats.wrestling + f.stats.grappling + f.stats.submissionOffense * 0.45 - fatiguePenalty - injuryPenalty,
-    defense: f.stats.defense + f.stats.chin * 0.5 + f.stats.submissionDefense * 0.55 + f.stats.fightIQ * 0.6,
-    finishKO: f.stats.power * 0.9 + f.stats.striking * 0.5 + f.stats.speed * 0.2,
-    finishSub: f.stats.submissionOffense * 0.95 + f.stats.grappling * 0.5 + f.stats.wrestling * 0.2,
-    chin: f.stats.chin,
-    submissionDefense: f.stats.submissionDefense
+    striking,
+    wrestling,
+    grappling,
+    defense,
+    pace: stat(f, "cardio") * 0.7 + stat(f, "durability") * 0.3 - fatiguePenalty,
+    finishKO: stat(f, "power") * 1.0 + stat(f, "striking") * 0.72 + stat(f, "speed") * 0.25 + stat(f, "fightIQ") * 0.18 - fatiguePenalty * 0.35,
+    finishSub: stat(f, "submissionOffense") * 1.05 + stat(f, "grappling") * 0.72 + stat(f, "wrestling") * 0.35 + stat(f, "fightIQ") * 0.18 - fatiguePenalty * 0.35,
+    chin: stat(f, "chin"),
+    submissionDefense: stat(f, "submissionDefense"),
+    fightIQ: stat(f, "fightIQ")
   };
 }
 
-function finishChance(attacker, defender, type, round) {
-  const lateRoundBonus = round >= 2 ? round * 0.01 : 0;
+function roundScore(a, b) {
+  const strikingEdge = a.striking - b.defense * 0.72;
+  const grapplingEdge = a.grappling - b.defense * 0.58;
+  const wrestlingEdge = a.wrestling - b.grappling * 0.5;
+  const paceEdge = a.pace - b.pace;
+  return strikingEdge * 0.42 + grapplingEdge * 0.3 + wrestlingEdge * 0.16 + paceEdge * 0.12 + Math.random() * 4;
+}
+
+function finishChance(attacker, defender, type, round, roundEdge) {
+  const lateRoundBonus = round >= 2 ? round * 0.008 : 0;
+  const momentum = clamp(roundEdge / 160, -0.035, 0.055);
+
   if (type === "ko") {
-    const edge = attacker.finishKO - (defender.defense + defender.chin * 0.3);
-    return clamp(0.015 + edge / 260 + lateRoundBonus, 0.01, 0.24);
+    const edge = attacker.finishKO - (defender.defense * 0.7 + defender.chin * 0.55);
+    return clamp(0.012 + edge / 220 + momentum + lateRoundBonus, 0.005, 0.28);
   }
 
-  const edge = attacker.finishSub - (defender.defense + defender.submissionDefense * 0.25);
-  return clamp(0.012 + edge / 275 + lateRoundBonus, 0.01, 0.2);
+  const edge = attacker.finishSub - (defender.defense * 0.62 + defender.submissionDefense * 0.65);
+  return clamp(0.01 + edge / 230 + momentum + lateRoundBonus, 0.005, 0.24);
+}
+
+function matchupNote(player, opponent, p, o) {
+  const strikingEdge = p.striking - o.striking;
+  const grapplingEdge = p.grappling - o.grappling;
+  const defenseEdge = p.defense - o.defense;
+  const best = [
+    { label: "striking", edge: strikingEdge },
+    { label: "grappling", edge: grapplingEdge },
+    { label: "defense", edge: defenseEdge }
+  ].sort((a, b) => Math.abs(b.edge) - Math.abs(a.edge))[0];
+
+  if (Math.abs(best.edge) < 6) return `The matchup opened evenly, with neither fighter showing a clear statistical edge.`;
+  const leader = best.edge > 0 ? player.name : opponent.name;
+  return `${leader} entered with the clearer ${best.label} edge.`;
 }
 
 export function simulateFight(player, opponent) {
@@ -39,13 +77,17 @@ export function simulateFight(player, opponent) {
     const p = perf(player, round);
     const o = perf(opponent, round);
 
-    const pScore = p.striking * 0.44 + p.grappling * 0.33 + p.defense * 0.23 + Math.random() * 10;
-    const oScore = o.striking * 0.44 + o.grappling * 0.33 + o.defense * 0.23 + Math.random() * 10;
+    if (round === 1) summary.push(matchupNote(player, opponent, p, o));
 
-    const playerKoChance = finishChance(p, o, "ko", round);
-    const oppKoChance = finishChance(o, p, "ko", round);
-    const playerSubChance = finishChance(p, o, "sub", round);
-    const oppSubChance = finishChance(o, p, "sub", round);
+    const pScore = roundScore(p, o);
+    const oScore = roundScore(o, p);
+    const pEdge = pScore - oScore;
+    const oEdge = oScore - pScore;
+
+    const playerKoChance = finishChance(p, o, "ko", round, pEdge);
+    const oppKoChance = finishChance(o, p, "ko", round, oEdge);
+    const playerSubChance = finishChance(p, o, "sub", round, pEdge);
+    const oppSubChance = finishChance(o, p, "sub", round, oEdge);
 
     const playerKoRoll = Math.random();
     const oppKoRoll = Math.random();
@@ -59,11 +101,11 @@ export function simulateFight(player, opponent) {
         winner: player.name,
         loser: opponent.name,
         method: "KO/TKO",
-        narrative: `Round ${round}: ${player.name} found the finish with heavy strikes.`,
+        narrative: `Round ${round}: ${player.name}'s striking and power created a stoppage.`,
         chance: playerKoChance,
         roll: playerKoRoll,
-        iq: player.stats.fightIQ,
-        roundScoreEdge: pScore - oScore
+        iq: p.fightIQ,
+        roundScoreEdge: pEdge
       });
     }
 
@@ -72,11 +114,11 @@ export function simulateFight(player, opponent) {
         winner: opponent.name,
         loser: player.name,
         method: "KO/TKO",
-        narrative: `Round ${round}: ${opponent.name} dropped ${player.name} for a stoppage.`,
+        narrative: `Round ${round}: ${opponent.name}'s striking and power broke through for a stoppage.`,
         chance: oppKoChance,
         roll: oppKoRoll,
-        iq: opponent.stats.fightIQ,
-        roundScoreEdge: oScore - pScore
+        iq: o.fightIQ,
+        roundScoreEdge: oEdge
       });
     }
 
@@ -85,11 +127,11 @@ export function simulateFight(player, opponent) {
         winner: player.name,
         loser: opponent.name,
         method: "Submission",
-        narrative: `Round ${round}: ${player.name} locked in a fight-ending submission.`,
+        narrative: `Round ${round}: ${player.name}'s grappling chain produced the tap.`,
         chance: playerSubChance,
         roll: playerSubRoll,
-        iq: player.stats.fightIQ,
-        roundScoreEdge: pScore - oScore
+        iq: p.fightIQ,
+        roundScoreEdge: pEdge
       });
     }
 
@@ -98,11 +140,11 @@ export function simulateFight(player, opponent) {
         winner: opponent.name,
         loser: player.name,
         method: "Submission",
-        narrative: `Round ${round}: ${opponent.name} forced a tap after a scramble.`,
+        narrative: `Round ${round}: ${opponent.name}'s grappling chain forced the tap.`,
         chance: oppSubChance,
         roll: oppSubRoll,
-        iq: opponent.stats.fightIQ,
-        roundScoreEdge: oScore - pScore
+        iq: o.fightIQ,
+        roundScoreEdge: oEdge
       });
     }
 
@@ -110,8 +152,8 @@ export function simulateFight(player, opponent) {
       finishEvents.sort((a, b) => {
         const marginA = a.chance - a.roll;
         const marginB = b.chance - b.roll;
-        const scoreA = marginA * 100 + a.iq * 0.22 + a.roundScoreEdge * 0.55 + Math.random() * 3;
-        const scoreB = marginB * 100 + b.iq * 0.22 + b.roundScoreEdge * 0.55 + Math.random() * 3;
+        const scoreA = marginA * 120 + a.iq * 0.22 + a.roundScoreEdge * 0.7 + Math.random() * 2;
+        const scoreB = marginB * 120 + b.iq * 0.22 + b.roundScoreEdge * 0.7 + Math.random() * 2;
         return scoreB - scoreA;
       });
 
@@ -127,10 +169,10 @@ export function simulateFight(player, opponent) {
 
     if (pScore > oScore) {
       playerRounds += 1;
-      summary.push(`Round ${round}: ${player.name} won the exchanges.`);
+      summary.push(`Round ${round}: ${player.name} won the round through stronger stat edges.`);
     } else {
       oppRounds += 1;
-      summary.push(`Round ${round}: ${opponent.name} edged the round.`);
+      summary.push(`Round ${round}: ${opponent.name} took the round by exploiting the matchup.`);
     }
   }
 
@@ -140,7 +182,6 @@ export function simulateFight(player, opponent) {
     ? { winner: player.name, loser: opponent.name, method: "Decision", round: 3, summary }
     : { winner: opponent.name, loser: player.name, method: "Decision", round: 3, summary };
 }
-
 
 export function runFightSimDiagnostics(player, opponent, iterations = 5000) {
   const outcomes = {
@@ -164,11 +205,13 @@ export function runFightSimDiagnostics(player, opponent, iterations = 5000) {
     for (let round = 1; round <= 3; round += 1) {
       const p = perf(player, round);
       const o = perf(opponent, round);
+      const pScore = roundScore(p, o);
+      const oScore = roundScore(o, p);
       const chances = [
-        finishChance(p, o, "ko", round),
-        finishChance(o, p, "ko", round),
-        finishChance(p, o, "sub", round),
-        finishChance(o, p, "sub", round)
+        finishChance(p, o, "ko", round, pScore - oScore),
+        finishChance(o, p, "ko", round, oScore - pScore),
+        finishChance(p, o, "sub", round, pScore - oScore),
+        finishChance(o, p, "sub", round, oScore - pScore)
       ];
       if (chances.some((chance) => Number.isNaN(chance))) outcomes.nanFinishChances += 1;
     }
