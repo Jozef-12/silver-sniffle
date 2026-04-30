@@ -13,10 +13,12 @@ export function createBaseStats(style) {
 }
 
 export function createFighter({ name, age, weightClass, style }) {
+  const startingAge = Number(age);
   return {
     id: crypto.randomUUID(),
     name,
-    age: Number(age),
+    age: startingAge,
+    startingAge,
     weightClass,
     style,
     stats: createBaseStats(style),
