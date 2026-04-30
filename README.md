@@ -2,16 +2,19 @@
 
 MMA Career Manager (MVP-first) prototype.
 
-## Current MVP State (after Phase 4 hardening)
+## Current MVP State (after fight loop integration)
 This build currently includes:
 - Fighter creation flow (Phase 2)
 - Training loop with stat/condition/injury updates (Phase 3)
 - Matchmaking/fight offer generation visible in the dashboard (Phase 4)
+- Fight simulation connected to accepted fight offers (Phase 5)
+- Career result processing for record, money, fame, ranking, condition, injuries, and history (Phase 6 baseline)
 - Local persistence hooks connected to the active career (load/save/reset)
 
-Not yet connected:
-- Fight simulation is present in code, diagnostics are in place, and it is intentionally not wired into the main UI flow yet.
-- Full career persistence/history integration is still partial and will be completed in a later phase.
+Still partial:
+- Career history is visible, but deeper timeline filtering/detail views are still pending.
+- Fight detail UX is currently inline in the dashboard; a dedicated modal/details view remains a follow-up.
+- Long-term balancing and expanded career systems remain post-MVP work.
 
 ## Requirements
 - Node.js 18+
@@ -38,11 +41,18 @@ Not yet connected:
    - Fighter Overview
    - Core Stats
    - Phase 3 Training actions
-   - Phase 4 Matchmaking offers
+   - Phase 4-5 Matchmaking + Fight Simulation offers
+   - Fight Result
+   - Career History
 4. Run one or more training weeks and confirm stat/condition changes appear.
 5. Click **Generate New Offers** and verify offers refresh.
-6. Refresh the browser and confirm the existing career loads from storage.
-7. Click **Clear / Reset Career** and verify a new career can be started.
+6. Click **Accept Fight** on an offer and confirm:
+   - A fight result appears
+   - Record, money, fame, ranking, condition, and injury status update
+   - Career History receives a new entry
+   - New offers are generated for the updated career state
+7. Refresh the browser and confirm the existing career loads from storage.
+8. Click **Clear / Reset Career** and verify a new career can be started.
 
 ## Build check
 Run a production build to ensure the app compiles:
