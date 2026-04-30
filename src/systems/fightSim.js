@@ -1,10 +1,12 @@
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 function perf(f, round) {
+  const condition = Number.isFinite(f.condition) ? f.condition : 100;
+  const injuries = Array.isArray(f.injuries) ? f.injuries : [];
   const cardioTax = Math.max(0, 62 - f.stats.cardio);
   const lateRoundScale = 0.15 + Math.max(0, round - 1) * 0.35;
-  const fatiguePenalty = (100 - f.condition) * 0.22 + cardioTax * lateRoundScale;
-  const injuryPenalty = f.injuries?.length ? 4 + f.injuries.length * 1.5 : 0;
+  const fatiguePenalty = (100 - condition) * 0.22 + cardioTax * lateRoundScale;
+  const injuryPenalty = injuries.length ? 4 + injuries.length * 1.5 : 0;
 
   return {
     striking: f.stats.striking + f.stats.speed * 0.7 + f.stats.power * 0.55 - fatiguePenalty - injuryPenalty,
