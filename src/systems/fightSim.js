@@ -11,7 +11,9 @@ function perf(f, round) {
     grappling: f.stats.wrestling + f.stats.grappling + f.stats.submissionOffense * 0.45 - fatiguePenalty - injuryPenalty,
     defense: f.stats.defense + f.stats.chin * 0.5 + f.stats.submissionDefense * 0.55 + f.stats.fightIQ * 0.6,
     finishKO: f.stats.power * 0.9 + f.stats.striking * 0.5 + f.stats.speed * 0.2,
-    finishSub: f.stats.submissionOffense * 0.95 + f.stats.grappling * 0.5 + f.stats.wrestling * 0.2
+    finishSub: f.stats.submissionOffense * 0.95 + f.stats.grappling * 0.5 + f.stats.wrestling * 0.2,
+    chin: f.stats.chin,
+    submissionDefense: f.stats.submissionDefense
   };
 }
 
@@ -73,4 +75,46 @@ export function simulateFight(player, opponent) {
   return playerRounds > oppRounds
     ? { winner: player.name, loser: opponent.name, method: "Decision", round: 3, summary }
     : { winner: opponent.name, loser: player.name, method: "Decision", round: 3, summary };
+}
+
+
+export function runFightSimDiagnostics(player, opponent, iterations = 5000) {
+  const outcomes = {
+    playerKo: 0,
+    opponentKo: 0,
+    playerSub: 0,
+    opponentSub: 0,
+    decisions: 0,
+    draws: 0,
+    nanFinishChances: 0
+  };
+
+  for (let i = 0; i < iterations; i += 1) {
+    for (let round = 1; round <= 3; round += 1) {
+      const p = perf(player, round);
+      const o = perf(opponent, round);
+      const chances = [
+        finishChance(p, o, "ko", round),
+        finishChance(o, p, "ko", round),
+        finishChance(p, o, "sub", round),
+        finishChance(o, p, "sub", round)
+      ];
+      if (chances.some((chance) => Number.isNaN(chance))) outcomes.nanFinishChances += 1;
+    }
+
+    const result = simulateFight(player, opponent);
+    if (result.method === "KO/TKO") {
+      if (result.winner === player.name) outcomes.playerKo += 1;
+      else if (result.winner === opponent.name) outcomes.opponentKo += 1;
+    } else if (result.method === "Submission") {
+      if (result.winner === player.name) outcomes.playerSub += 1;
+      else if (result.winner === opponent.name) outcomes.opponentSub += 1;
+    } else if (result.method === "Decision") {
+      outcomes.decisions += 1;
+    } else if (result.method === "Draw") {
+      outcomes.draws += 1;
+    }
+  }
+
+  return outcomes;
 }
