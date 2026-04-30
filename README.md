@@ -2,14 +2,15 @@
 
 MMA Career Manager (MVP-first) prototype.
 
-## Current MVP State (after fight loop integration)
+## Current MVP State (after camp and energy pass)
 This build currently includes:
 - Fighter creation flow (Phase 2)
-- Training loop with stat/condition/injury updates (Phase 3)
+- All-stat training options with energy costs, recovery, condition, and injury tradeoffs (Phase 3)
 - Matchmaking/fight offer generation visible in the dashboard (Phase 4)
-- Fight simulation connected to accepted fight offers (Phase 5)
-- Career result processing for record, money, fame, ranking, condition, injuries, and history (Phase 6 baseline)
-- Local persistence hooks connected to the active career (load/save/reset)
+- Accepted fight offers now start 4-week fight camps instead of instantly simulating (Phase 5)
+- Fight simulation with stronger stat-driven matchup impact for rounds and finishes (Phase 5)
+- Career result processing for record, money, fame, ranking, condition, injuries, age, and history (Phase 6 baseline)
+- Local persistence hooks connected to the active career, including active camps (load/save/reset)
 
 Still partial:
 - Career history is visible, but deeper timeline filtering/detail views are still pending.
@@ -40,18 +41,22 @@ Still partial:
 3. Click **Create Fighter** and confirm dashboard sections render:
    - Fighter Overview
    - Core Stats
-   - Phase 3 Training actions
-   - Phase 4-5 Matchmaking + Fight Simulation offers
+   - Training actions
+   - Matchmaking offers
    - Fight Result
    - Career History
-4. Run one or more training weeks and confirm stat/condition changes appear.
+4. Run training weeks and confirm:
+   - Every stat has a trainable option
+   - Energy decreases after hard training
+   - Hard training is blocked when energy is too low
+   - Recovery restores energy and can improve injuries
 5. Click **Generate New Offers** and verify offers refresh.
-6. Click **Accept Fight** on an offer and confirm:
-   - A fight result appears
-   - Record, money, fame, ranking, condition, and injury status update
-   - Career History receives a new entry
-   - New offers are generated for the updated career state
-7. Refresh the browser and confirm the existing career loads from storage.
+6. Click **Sign Fight Camp** on an offer and confirm:
+   - A 4-week fight camp appears
+   - Training/recovery advances the camp countdown
+   - Fight night runs automatically after camp completion
+   - Record, money, fame, ranking, condition, injury status, age, and history update
+7. Refresh the browser and confirm the existing career and active camp load from storage.
 8. Click **Clear / Reset Career** and verify a new career can be started.
 
 ## Build check
