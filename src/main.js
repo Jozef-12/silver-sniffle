@@ -20,6 +20,15 @@ function themeToggleLabel() {
   return getTheme() === "light" ? "Dark mode" : "White mode";
 }
 
+function render() {
+  if (fighter) {
+    renderOverview();
+    return;
+  }
+
+  renderCreateFighter();
+}
+
 function bindThemeToggle() {
   const btn = document.getElementById("theme-toggle");
   if (!btn) return;
@@ -99,8 +108,8 @@ function renderOverview() {
 
   document.getElementById("new").onclick = () => {
     fighter = null;
-    renderCreateFighter();
+    render();
   };
 }
 
-renderCreateFighter();
+render();

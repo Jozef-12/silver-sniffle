@@ -20,10 +20,15 @@ export function simulateFight(player, opponent) {
     const pScore = p.striking * 0.45 + p.grappling * 0.35 + p.defense * 0.2 + Math.random() * 12;
     const oScore = o.striking * 0.45 + o.grappling * 0.35 + o.defense * 0.2 + Math.random() * 12;
 
-    const koChance = clamp((p.finishKO - o.defense) / 180, 0.01, 0.25);
-    const subChance = clamp((p.finishSub - o.defense) / 190, 0.01, 0.2);
-    if (Math.random() < koChance) return { winner: player.name, loser: opponent.name, method: "KO/TKO", round, summary: [...summary, `Round ${round}: ${player.name} landed a fight-ending combination.`] };
-    if (Math.random() < subChance) return { winner: player.name, loser: opponent.name, method: "Submission", round, summary: [...summary, `Round ${round}: ${player.name} secured a submission after grappling exchanges.`] };
+    const playerKoChance = clamp((p.finishKO - o.defense) / 180, 0.01, 0.25);
+    const playerSubChance = clamp((p.finishSub - o.defense) / 190, 0.01, 0.2);
+    const oppKoChance = clamp((o.finishKO - p.defense) / 180, 0.01, 0.25);
+    const oppSubChance = clamp((o.finishSub - p.defense) / 190, 0.01, 0.2);
+
+    if (Math.random() < playerKoChance) return { winner: player.name, loser: opponent.name, method: "KO/TKO", round, summary: [...summary, `Round ${round}: ${player.name} landed a fight-ending combination.`] };
+    if (Math.random() < playerSubChance) return { winner: player.name, loser: opponent.name, method: "Submission", round, summary: [...summary, `Round ${round}: ${player.name} secured a submission after grappling exchanges.`] };
+    if (Math.random() < oppKoChance) return { winner: opponent.name, loser: player.name, method: "KO/TKO", round, summary: [...summary, `Round ${round}: ${opponent.name} landed a fight-ending combination.`] };
+    if (Math.random() < oppSubChance) return { winner: opponent.name, loser: player.name, method: "Submission", round, summary: [...summary, `Round ${round}: ${opponent.name} secured a submission after grappling exchanges.`] };
 
     if (pScore > oScore) {
       playerRounds += 1;
