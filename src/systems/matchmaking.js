@@ -15,7 +15,9 @@ export function generateOpponent(player, difficulty = 0) {
     stats,
     record: `${rand(2, 22)}-${rand(0, 8)}-${rand(0, 2)}`,
     ranking: Math.max(1, Math.min(80, player.ranking + rand(-10, 10) - difficulty * 2)),
-    difficulty: ["Manageable", "Even", "Tough"][difficulty + 1] || "Even"
+    difficulty: ["Manageable", "Even", "Tough"][difficulty + 1] || "Even",
+    condition: 100,
+    injuries: []
   };
 }
 
