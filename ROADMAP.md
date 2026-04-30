@@ -16,18 +16,20 @@
 - Generated opponents with difficulty bands
 - Offer list based on career stage
 
-## Phase 5: Fight simulator (in progress, not connected to main UI)
+## Phase 5: Fight simulator ✅
 - 3-round simulation logic exists
-- Ongoing balancing for KO/submission/decision fairness
-- UI flow connection intentionally deferred until stabilization is complete
+- KO/TKO, submission, decision, and draw outcomes supported
+- Fight offers can now be accepted from the main UI
 
-## Phase 6: Career progression + history (partial)
+## Phase 6: Career progression + history (baseline connected)
 - Basic save/load/reset persistence for current fighter loop
-- Full fight outcome persistence/history integration still pending
+- Accepted fight results update record, money, fame, ranking, condition, injuries, and history
+- Richer timeline/detail views still pending
 
 ## Phase 7: UI polish
 - Improve readability, labels, and information density
 - Continue replacing raw alerts with inline UX messaging
+- Add dedicated fight detail modal and richer offer explanations
 
 ## Phase 8+: Post-MVP expansion
 - Contracts/promotions/rank ecosystems
