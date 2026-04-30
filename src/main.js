@@ -5,9 +5,35 @@ let fighter = null;
 
 const app = document.getElementById("app");
 
+const THEME_KEY = "mma_theme";
+
+function getTheme() {
+  return localStorage.getItem(THEME_KEY) || "dark";
+}
+
+function applyTheme(theme) {
+  document.body.classList.toggle("light", theme === "light");
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function themeToggleLabel() {
+  return getTheme() === "light" ? "Dark mode" : "White mode";
+}
+
+function bindThemeToggle() {
+  const btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+  btn.onclick = () => {
+    applyTheme(getTheme() === "light" ? "dark" : "light");
+    render();
+  };
+}
+
+applyTheme(getTheme());
+
 function renderCreateFighter() {
   app.innerHTML = `
-    <h1>MMA Career Manager</h1>
+    <div class="topbar"><h1>MMA Career Manager</h1><button id="theme-toggle">${themeToggleLabel()}</button></div>
     <div class='card'>
       <h2>Phase 2: Create Fighter</h2>
       <div class='row'><input id='name' placeholder='Fighter Name' value='Rookie Fighter'></div>
@@ -18,6 +44,8 @@ function renderCreateFighter() {
       <p class='small'>MVP scope currently includes only project setup + fighter model + fighter creation flow.</p>
     </div>
   `;
+
+  bindThemeToggle();
 
   document.getElementById("create").onclick = () => {
     const name = document.getElementById("name").value.trim();
@@ -37,7 +65,7 @@ function renderCreateFighter() {
 
 function renderOverview() {
   app.innerHTML = `
-    <h1>MMA Career Manager</h1>
+    <div class="topbar"><h1>MMA Career Manager</h1><button id="theme-toggle">${themeToggleLabel()}</button></div>
     <div class='grid'>
       <section class='card'>
         <h2>Fighter Overview</h2>
@@ -66,6 +94,8 @@ function renderOverview() {
       </section>
     </div>
   `;
+
+  bindThemeToggle();
 
   document.getElementById("new").onclick = () => {
     fighter = null;
