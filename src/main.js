@@ -2,10 +2,12 @@ import { WEIGHT_CLASSES, STYLES, STAT_KEYS, TRAINING_OPTIONS } from "./models/co
 import { createFighter } from "./models/factory";
 import { applyTraining } from "./systems/training";
 import { getFightOffers } from "./systems/matchmaking";
+import { loadCareerState, saveCareerState, clearCareerState } from "./systems/persistence";
 
 let fighter = null;
 let trainingLog = [];
 let latestOffers = [];
+let uiError = "";
 
 const app = document.getElementById("app");
 
@@ -33,11 +35,29 @@ function bindThemeToggle() {
   };
 }
 
+function setError(message = "") {
+  uiError = message;
+}
+
+function persistCareer() {
+  if (!fighter) return;
+  saveCareerState({ fighter, trainingLog, latestOffers });
+}
+
+function validateCreateInput({ name, age, weightClass, style }) {
+  if (!name) return "Please enter a fighter name.";
+  if (!Number.isFinite(age) || age < 18 || age > 45) return "Age must be a number between 18 and 45.";
+  if (!WEIGHT_CLASSES.includes(weightClass)) return "Please choose a valid weight class.";
+  if (!STYLES.includes(style)) return "Please choose a valid fighting style.";
+  return "";
+}
+
 function renderCreateFighter() {
   app.innerHTML = `
     <div class="topbar"><h1>MMA Career Manager</h1><button id="theme-toggle">${themeToggleLabel()}</button></div>
     <div class='card'>
       <h2>Phase 2: Create Fighter</h2>
+      ${uiError ? `<p class='small' style='color:#ff7f7f'><b>${uiError}</b></p>` : ""}
       <div class='row'><input id='name' placeholder='Fighter Name' value='Rookie Fighter'></div>
       <div class='row'><label>Age <input id='age' type='number' min='18' max='45' value='24'></label></div>
       <div class='row'><label>Weight Class <select id='weight'>${WEIGHT_CLASSES.map((w) => `<option>${w}</option>`).join("")}</select></label></div>
@@ -55,14 +75,18 @@ function renderCreateFighter() {
     const weightClass = document.getElementById("weight").value;
     const style = document.getElementById("style").value;
 
-    if (!name) {
-      alert("Please enter a fighter name.");
+    const validationError = validateCreateInput({ name, age, weightClass, style });
+    if (validationError) {
+      setError(validationError);
+      renderCreateFighter();
       return;
     }
 
     fighter = createFighter({ name, age, weightClass, style });
     trainingLog = [];
     latestOffers = getFightOffers(fighter);
+    setError("");
+    persistCareer();
     renderOverview();
   };
 }
@@ -142,6 +166,7 @@ function bindOverviewEvents() {
       const changes = applyTraining(fighter, option);
       trainingLog = [`Week ${fighter.careerWeek}: ${changes.join(" ")}`, ...trainingLog].slice(0, 10);
       latestOffers = getFightOffers(fighter);
+      persistCareer();
       renderOverview();
     };
   });
@@ -150,14 +175,17 @@ function bindOverviewEvents() {
   if (refresh) {
     refresh.onclick = () => {
       latestOffers = getFightOffers(fighter);
+      persistCareer();
       renderOverview();
     };
   }
 
-  document.getElementById("new").onclick = () => {
+  document.getElementById("reset-career").onclick = () => {
     fighter = null;
     trainingLog = [];
     latestOffers = [];
+    setError("");
+    clearCareerState();
     renderCreateFighter();
   };
 }
@@ -172,14 +200,22 @@ function renderOverview() {
       ${renderMatchmakingCard()}
       <section class='card full'>
         <h2>Career Flow</h2>
-        <p class='small'>Fighter creation is unchanged. Phase 3 and 4 systems are now playable from this dashboard.</p>
-        <button id='new'>Create Another Fighter</button>
+        <p class='small'>Fighter creation, training, and fight offer generation are playable. Fight simulation is not yet wired into this flow.</p>
+        <button id='reset-career'>Clear / Reset Career</button>
       </section>
     </div>
   `;
 
   bindThemeToggle();
   bindOverviewEvents();
+}
+
+function hydrateFromSave() {
+  const saved = loadCareerState();
+  if (!saved || !saved.fighter) return;
+  fighter = saved.fighter;
+  trainingLog = Array.isArray(saved.trainingLog) ? saved.trainingLog : [];
+  latestOffers = Array.isArray(saved.latestOffers) ? saved.latestOffers : getFightOffers(fighter);
 }
 
 function render() {
@@ -190,5 +226,6 @@ function render() {
   }
 }
 
+hydrateFromSave();
 applyTheme(getTheme());
 render();
