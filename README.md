@@ -2,14 +2,16 @@
 
 MMA Career Manager (MVP-first) prototype.
 
-## Current Scope
-This build currently includes **Phase 1 + Phase 2**:
-- Project setup and documentation
-- Fighter data model
-- Fighter creation flow
-- Fighter overview + core stats display
+## Current MVP State (after Phase 3 + 4)
+This build currently includes:
+- Fighter creation flow (Phase 2)
+- Training loop with stat/condition/injury updates (Phase 3)
+- Matchmaking/fight offer generation visible in the dashboard (Phase 4)
+- Local persistence hooks connected to the active career (load/save/reset)
 
-Training, matchmaking, and fight simulation are intentionally deferred for later phases.
+Not yet connected:
+- Fight simulation is present in code but not wired into the main UI flow.
+- Full career persistence/history integration is still partial and will be completed in a later phase.
 
 ## Requirements
 - Node.js 18+
@@ -26,18 +28,21 @@ Training, matchmaking, and fight simulation are intentionally deferred for later
    ```
 3. Open the local URL shown in the terminal (typically `http://localhost:5173`).
 
-## How to test the game out (manual)
+## Manual MVP walkthrough
 1. Launch the app with `npm run dev`.
-2. On the **Create Fighter** screen:
-   - Enter a fighter name
-   - Set age
-   - Choose weight class and style
-   - Click **Create Fighter**
-3. Confirm the **Fighter Overview** screen appears and shows:
-   - Name, age, weight class, style
-   - Promotion, record, money, fame, ranking
-4. Confirm **Core Stats** render for all stat categories.
-5. Click **Create Another Fighter** and verify you return to the creation form.
+2. On **Create Fighter**:
+   - Enter a fighter name (required)
+   - Enter age (must be 18-45)
+   - Choose a valid weight class and style
+3. Click **Create Fighter** and confirm dashboard sections render:
+   - Fighter Overview
+   - Core Stats
+   - Phase 3 Training actions
+   - Phase 4 Matchmaking offers
+4. Run one or more training weeks and confirm stat/condition changes appear.
+5. Click **Generate New Offers** and verify offers refresh.
+6. Refresh the browser and confirm the existing career loads from storage.
+7. Click **Clear / Reset Career** and verify a new career can be started.
 
 ## Build check
 Run a production build to ensure the app compiles:

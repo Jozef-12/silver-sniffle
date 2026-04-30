@@ -1,8 +1,14 @@
 # TODO
 
-## Immediate MVP follow-ups
-- [ ] Add input validation and clearer user-facing error messages.
-- [ ] Add persistence (save/load via localStorage).
+## Immediate stabilization (current)
+- [x] Connect persistence to the active MVP loop (create, train, refresh offers, load on boot, clear/reset).
+- [x] Add user-friendly create-fighter validation messages (no empty name, age 18-45, valid class/style).
+- [x] Rebalance fight simulator internals so both sides can win by KO/TKO or submission.
+- [x] Keep fight simulation disconnected from UI until full verification and integration pass.
+
+## Next MVP follow-ups
+- [ ] Connect the fight simulator to matchmaking selection once balance + UX review is complete.
+- [ ] Persist expanded career timeline and fight history views.
 - [ ] Add clearer fight offer risk/reward breakdown.
 - [ ] Add dedicated fight detail modal instead of log-only output.
 
